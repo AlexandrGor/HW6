@@ -9,6 +9,18 @@ def mean(numbers):
             return sum(numbers)/len(numbers)
     else:
         return 0
+
+def courses_rating(persons, course):
+    res = 0
+    lenth = 0
+    for person in persons:
+        if course in person.grades:
+            if person.grades[course]:
+                res += mean(person.grades[course])
+                lenth += 1
+    if lenth != 0:
+        return res/lenth
+
 class Student:
     def __init__(self, name, surname, gender):
         self.name = name
@@ -17,10 +29,13 @@ class Student:
         self.finished_courses = []
         self.courses_in_progress = []
         self.grades = {}
-    def rate_lecturer(self, lecturer, grade):
-        if isinstance(lecturer, Lecturer) and (set(self.courses_in_progress) & set(lecturer.courses_attached)):
+    def rate_lecturer(self, lecturer, course, grade):
+        if isinstance(lecturer, Lecturer) and course in self.courses_in_progress and course in lecturer.courses_attached:
             if isinstance(grade, int) and (0 <= grade <= 10) :
-                lecturer.grades += [grade]
+                if course in lecturer.grades:
+                    lecturer.grades[course] += [grade]
+                else:
+                    lecturer.grades[course] = [grade]
             else:
                 print("Оценка введена неверно")
         else:
@@ -49,7 +64,7 @@ class Mentor:
 class Lecturer(Mentor):
     def __init__(self, name, surname):
         super().__init__(name, surname)
-        self.grades = []
+        self.grades = {}
     def __str__(self):
         return f"Имя: {self.name}\nФамилия: {self.surname}\nСредняя оценка: {mean(self.grades)}"
     def __lt__(self, other):
@@ -74,43 +89,47 @@ class Reviewer(Mentor):
         else:
             return 'Ошибка'
 
-Student_1 = Student('Ruoy', 'Eman', 'your_gender')
-Student_1.courses_in_progress += ['Python']
-Student_1.courses_in_progress += ['Git']
-Student_1.finished_courses += ['Introduction to the programming']
+Students = [Student('Ruoy', 'Eman', 'your_gender'),
+            Student('Ron', 'Wuizli', 'your_gender')]
+Students[0].courses_in_progress += ['Python']
+Students[0].courses_in_progress += ['Git']
+Students[0].finished_courses += ['Introduction to the programming']
+Students[1].courses_in_progress += ['Python']
+Students[1].finished_courses += ['Paint']
+Students[1].finished_courses += ['Calculator']
 
-Student_2 = Student('Ron', 'Wuizli', 'your_gender')
-Student_2.courses_in_progress += ['Python']
-Student_2.finished_courses += ['Paint']
-Student_2.finished_courses += ['Calculator']
+Lecturers = [Lecturer('Leps', 'Grisha'),
+             Lecturer('Jigurda', 'Nikita')]
+Lecturers[0].courses_attached += ['Python']
+Lecturers[0].courses_attached += ['Java']
+Lecturers[1].courses_attached += ['JS']
 
-Lecturer_1 = Lecturer('Leps', 'Grisha')
-Lecturer_1.courses_attached += ['Python']
-Lecturer_1.courses_attached += ['Java']
+Reviewers = [Reviewer('Nikolaev', 'Igor'),
+             Reviewer('Baskov', 'Nikolay')]
+Reviewers[0].courses_attached += ['Python']
+Reviewers[0].courses_attached += ['Git']
+Reviewers[1].courses_attached += ['Python']
+Reviewers[1].courses_attached += ['JS']
 
-Lecturer_2 = Lecturer('Jigurda', 'Nikita')
-Lecturer_2.courses_attached += ['JS']
+Reviewers[0].rate_hw(Students[0], 'Python', 8)
+Reviewers[0].rate_hw(Students[0], 'Python', 9)
+Reviewers[0].rate_hw(Students[0], 'Git', 10)
+Reviewers[0].rate_hw(Students[1], 'Python', 10)
+Reviewers[1].rate_hw(Students[1], 'Python', 6)
 
-Reviewer_1 = Reviewer('Nikolaev', 'Igor')
-Reviewer_1.courses_attached += ['Python']
-Reviewer_1.courses_attached += ['Git']
+Students[0].rate_lecturer(Lecturers[0], 'Python', 10)
+Students[0].rate_lecturer(Lecturers[0], 'Python', 9)
+Students[1].rate_lecturer(Lecturers[0], 'Python', 8)
+Students[1].rate_lecturer(Lecturers[1], 'JS', 7)
 
-Reviewer_1.rate_hw(Student_1, 'Python', 8)
-Reviewer_1.rate_hw(Student_1, 'Python', 9)
-Reviewer_1.rate_hw(Student_1, 'Git', 10)
-Reviewer_1.rate_hw(Student_2, 'Python', 10)
-Reviewer_1.rate_hw(Student_2, 'Python', 6)
+print(f"Reviewers[0]:\n{Reviewers[0]}\n")
+print(f"Lecturers[0]:\n{Lecturers[0]}\n")
+print(f"Lecturers[1]:\n{Lecturers[1]}\n")
+print(f"Students[0]:\n{Students[0]}\n")
+print(f"Students[1]:\n{Students[1]}\n")
 
-Student_1.rate_lecturer(Lecturer_1, 10)
-Student_1.rate_lecturer(Lecturer_1, 9)
-Student_2.rate_lecturer(Lecturer_1, 9)
-Student_1.rate_lecturer(Lecturer_2, 7)
+print("Lecturers[0] < Lecturers[1] ==>", Lecturers[0] > Lecturers[1])
+print("Students[0] > Students[1] ==>", Students[0] > Students[1])
 
-print(f"Reviewer_1:\n{Reviewer_1}\n")
-print(f"Lecturer_1:\n{Lecturer_1}\n")
-print(f"Lecturer_2:\n{Lecturer_2}\n")
-print(f"Student_1:\n{Student_1}\n")
-print(f"Student_2:\n{Student_2}\n")
-
-print("Lecturer_1 < Lecturer_2 ==>", Lecturer_1 > Lecturer_2)
-print("Student_1 > Student_2 ==>", Student_1 > Student_2)
+print(f"\nСредняя оценка домашних работ по Python: {courses_rating(Students, 'Python')}")
+print(f"Средняя оценка лекторов по курсу Python: {courses_rating(Lecturers, 'Python')}")
